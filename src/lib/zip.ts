@@ -586,7 +586,24 @@ get_header(); ?>
 
 /* ---------- сборка ---------- */
 
-export async function buildPluginZip(): Promise<{ blob: Blob; files: number; bytes: number }> {
+/* CRC32 (IEEE 802.3) — для контрольной суммы релиза */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+export function crc32(data: Uint8Array): string {
+  let c = 0xffffffff;
+  for (let i = 0; i < data.length; i++) c = CRC_TABLE[(c ^ data[i]) & 0xff] ^ (c >>> 8);
+  return "0x" + ((c ^ 0xffffffff) >>> 0).toString(16).toUpperCase().padStart(8, "0");
+}
+
+export async function buildPluginZip(): Promise<{ blob: Blob; files: number; bytes: number; crc32: string }> {
   const zip = new JSZip();
   const root = zip.folder("wasee-importer")!;
 
@@ -595,10 +612,11 @@ export async function buildPluginZip(): Promise<{ blob: Blob; files: number; byt
     root.file(path, content);
   }
 
-  const blob = await zip.generateAsync({
-    type: "blob",
+  const bytes = await zip.generateAsync({
+    type: "uint8array",
     compression: "DEFLATE",
     compressionOptions: { level: 9 },
   });
-  return { blob, files: Object.keys(SRC).length + 1, bytes: blob.size };
+  const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/zip" });
+  return { blob, files: Object.keys(SRC).length + 1, bytes: blob.size, crc32: crc32(bytes) };
 }
