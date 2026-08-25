@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-ink: #0b101b;
+  --color-ink2: #0e1524;
+  --color-panel: #121a2b;
+  --color-panel2: #172136;
+  --color-line: #223050;
+  --color-line2: #2e4066;
+  --color-fog: #e8eef9;
+  --color-dim: #94a3c0;
+  --color-faint: #5c6c8f;
+  --color-amber: #ffb224;
+  --color-amber2: #ffce6b;
+  --color-cyan: #43d2ff;
+  --color-mint: #3ddc97;
+  --color-coral: #ff6161;
+  --color-steel: #6fa5ff;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-fog);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(255, 178, 36, 0.32);
+  color: #fff;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #263554;
+  border-radius: 8px;
+  border: 2px solid var(--color-ink);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #35497a;
+}
+
+/* ---------- ambient layers ---------- */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(122, 152, 214, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122, 152, 214, 0.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 120% 90% at 50% 0%, black 30%, transparent 78%);
+}
+
+.ghost-text {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(148, 163, 192, 0.3);
+}
+
+/* ---------- motion ---------- */
+@keyframes blinkc {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+.blink { animation: blinkc 1.1s steps(1) infinite; }
+
+@keyframes dashflow {
+  to { stroke-dashoffset: -34; }
+}
+.dashline {
+  stroke-dasharray: 5 12;
+  animation: dashflow 1.15s linear infinite;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-130%); }
+  100% { transform: translateX(520%); }
+}
+.scanline { animation: sweep 5.6s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+
+@keyframes pingdot {
+  0% { box-shadow: 0 0 0 0 rgba(61, 220, 151, 0.55); }
+  100% { box-shadow: 0 0 0 9px rgba(61, 220, 151, 0); }
+}
+.livedot { animation: pingdot 1.7s ease-out infinite; }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.75s ease, transform 0.75s ease;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes rowflash {
+  from { background-color: rgba(67, 210, 255, 0.16); }
+  to { background-color: transparent; }
+}
+.rowflash { animation: rowflash 0.9s ease-out; }
+
+@keyframes stripemove {
+  to { background-position: -36px 0; }
+}
+.stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.16) 0 9px,
+    transparent 9px 18px
+  );
+  animation: stripemove 0.9s linear infinite;
+}
+
+@keyframes glowpulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.glowpulse { animation: glowpulse 3.4s ease-in-out infinite; }
+
+@keyframes drawerin {
+  from { transform: translateX(60px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.drawerin { animation: drawerin 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fadein { animation: fadein 0.25s ease-out both; }
+
+@keyframes tickpop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.tickpop { animation: tickpop 0.35s ease-out both; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 52s linear infinite; }
+.marquee-hover:hover .marquee-track { animation-play-state: paused; }
+
+@keyframes bootline {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.bootline { animation: bootline 0.18s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .scanline,
+  .dashline,
+  .stripes,
+  .blink,
+  .livedot,
+  .glowpulse,
+  .rowflash,
+  .bootline {
+    animation: none !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
