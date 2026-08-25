@@ -1,6 +1,7 @@
 import BootOverlay from "./components/BootOverlay";
 import CatalogSection from "./components/CatalogSection";
 import ConsoleSection from "./components/ConsoleSection";
+import GuideSection from "./components/GuideSection";
 import MappingSection from "./components/MappingSection";
 import Overview from "./components/Overview";
 import ReportSection from "./components/ReportSection";
@@ -14,6 +15,7 @@ const FOOTER_NAV = [
   { id: "catalog", label: "Каталог источника" },
   { id: "mapping", label: "Маппинг полей" },
   { id: "report", label: "Цель: голый WP + Astra" },
+  { id: "guide", label: "Гайд по использованию" },
 ];
 
 const QUICK_CMDS = [
@@ -53,6 +55,8 @@ export default function App() {
         <MappingSection />
         <div className="mx-auto h-px max-w-[1360px] bg-gradient-to-r from-transparent via-line2 to-transparent" />
         <ReportSection />
+        <div className="mx-auto h-px max-w-[1360px] bg-gradient-to-r from-transparent via-line2 to-transparent" />
+        <GuideSection />
       </main>
 
       <footer className="relative border-t border-line bg-ink2/60">
