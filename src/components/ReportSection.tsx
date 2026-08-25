@@ -1,6 +1,13 @@
-import { INSTALL_STEPS, PLUGIN_FILES, SCOUT } from "../lib/data";
+import { INSTALL_STEPS, PLUGIN_FILES, TARGET } from "../lib/data";
 import { Reveal, SectionHead, TagChip } from "../lib/ui";
-import { IconDoc, IconFile, IconSignal } from "./Icons";
+import { IconFile, IconSignal, IconWrench } from "./Icons";
+
+const STATUS_META: Record<string, { label: string; cls: string }> = {
+  ok: { label: "на месте", cls: "border-mint/50 text-mint" },
+  missing: { label: "создаст плагин", cls: "border-amber/50 text-amber" },
+  optional: { label: "не обязателен", cls: "border-cyan/50 text-cyan" },
+  none: { label: "пусто", cls: "border-line2 text-faint" },
+};
 
 const KIND_CLS: Record<string, string> = {
   php: "text-amber",
@@ -14,102 +21,92 @@ export default function ReportSection() {
     <section id="report" className="mx-auto max-w-[1360px] scroll-mt-24 px-4 py-20 md:px-8">
       <SectionHead
         index="05"
-        kicker="отчёт разведчика"
-        title="Структура faseen.com"
-        note="Данные сняты встроенным классом class-wasee-scout.php: дамп CPT, ACF-групп и таксономий. На их основе плагин собирает маппинг ещё до первого импорта."
+        kicker="цель: голый wordpress"
+        title="Astra — и больше ничего"
+        note="На faseen.com нет ни CPT, ни ACF, ни таксономий — только ядро WP и тема Astra. Плагин регистрирует всю структуру сам при активации, цель готовить не нужно."
       />
 
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* scout report */}
-        <Reveal className="lg:col-span-7">
-          <div className="border border-line bg-panel/70">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2.5">
+        {/* диагностика цели */}
+        <Reveal className="lg:col-span-4">
+          <div className="flex h-full flex-col border border-line bg-panel/70">
+            <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
               <span className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.22em] text-dim">
                 <IconSignal className="h-3.5 w-3.5 text-cyan" />
-                разведка · {SCOUT.site}
+                диагностика · {TARGET.site}
               </span>
-              <code className="font-mono text-[10.5px] text-faint">{SCOUT.rest}</code>
             </div>
+            <div className="border-b border-line/70 px-4 py-3">
+              <div className="font-mono text-[11.5px] text-fog">{TARGET.engine}</div>
+              <div className="mt-1 font-mono text-[11px] text-amber/85">{TARGET.theme}</div>
+            </div>
+            <ul className="flex-1 divide-y divide-line/70">
+              {TARGET.state.map((s) => {
+                const m = STATUS_META[s.status];
+                return (
+                  <li key={s.key} className="group px-4 py-2.5 transition-colors hover:bg-panel2/60">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[12.5px] text-fog">{s.key}</span>
+                      <span className={`shrink-0 border px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wider ${m.cls}`}>
+                        {m.label}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 font-mono text-[10.5px] leading-relaxed text-faint">{s.value}</div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </Reveal>
 
-            <div className="divide-y divide-line/70">
-              {/* engine */}
-              <div className="grid grid-cols-[120px_1fr] gap-3 px-4 py-3">
-                <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint">движок</span>
-                <span className="font-mono text-[12px] text-fog">{SCOUT.engine}</span>
-              </div>
-
-              {/* CPT */}
-              {SCOUT.postTypes.map((pt) => (
-                <div key={pt.name} className="px-4 py-3.5">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint">CPT</span>
-                    <code className="font-mono text-[13px] font-semibold text-mint">{pt.name}</code>
-                    <span className="text-xs text-dim">«{pt.label}»</span>
-                    <span className="ml-auto font-mono text-[10.5px] text-faint">
-                      было {pt.before} → станет {pt.after}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {pt.supports.map((s) => (
-                      <TagChip key={s}>{s}</TagChip>
-                    ))}
-                  </div>
-                </div>
+        {/* что регистрирует плагин */}
+        <Reveal delay={100} className="lg:col-span-4">
+          <div className="flex h-full flex-col border border-line bg-panel/70">
+            <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-dim">
+                что регистрирует плагин
+              </span>
+              <TagChip tone="amber">hook: activate</TagChip>
+            </div>
+            <ul className="flex-1 space-y-2.5 px-4 py-4">
+              {TARGET.creates.map((c, i) => (
+                <li key={i} className="group flex gap-3 border border-line/70 bg-ink/50 px-3 py-2.5 transition-colors hover:border-amber/40">
+                  <span className="mt-0.5 font-mono text-[10px] tabular-nums text-amber/70">{String(i + 1).padStart(2, "0")}</span>
+                  <code className="min-w-0 break-words font-mono text-[10.5px] leading-relaxed text-dim transition-colors group-hover:text-fog">
+                    {c}
+                  </code>
+                </li>
               ))}
-
-              {/* ACF */}
-              {SCOUT.acfGroups.map((g) => (
-                <div key={g.key} className="px-4 py-3.5">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint">ACF</span>
-                    <span className="text-[13px] font-semibold text-amber">«{g.title}»</span>
-                    <code className="font-mono text-[10.5px] text-faint">{g.key}</code>
-                    <code className="ml-auto font-mono text-[10.5px] text-faint">{g.location}</code>
-                  </div>
-                  <ul className="mt-2.5 grid gap-1.5 sm:grid-cols-2">
-                    {g.fields.map((f) => (
-                      <li key={f.name} className="flex items-baseline justify-between gap-3 border border-line/70 bg-ink/50 px-2.5 py-1.5">
-                        <code className="truncate font-mono text-[11.5px] text-cyan">{f.name}</code>
-                        <span className="shrink-0 font-mono text-[9.5px] uppercase tracking-wider text-faint">{f.type}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-
-              {/* taxonomies */}
-              {SCOUT.taxonomies.map((tx) => (
-                <div key={tx.name} className="grid grid-cols-[120px_1fr] gap-3 px-4 py-3">
-                  <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint">таксономия</span>
-                  <span className="font-mono text-[12px]">
-                    <span className="text-steel">{tx.name}</span>
-                    <span className="text-dim"> · «{tx.label}» · object: {tx.object} · терминов к созданию: {tx.terms} · hierarchical</span>
-                  </span>
-                </div>
-              ))}
+            </ul>
+            <div className="border-t border-line px-4 py-3">
+              <p className="text-[11.5px] leading-relaxed text-faint">
+                <span className="font-mono uppercase tracking-wider text-cyan">fallback:</span> {TARGET.fallback}
+              </p>
             </div>
           </div>
         </Reveal>
 
-        {/* plugin file tree */}
-        <Reveal delay={120} className="lg:col-span-5">
+        {/* файлы плагина */}
+        <Reveal delay={200} className="lg:col-span-4">
           <div className="flex h-full flex-col border border-line bg-panel/70">
             <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
               <span className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.22em] text-dim">
-                <IconDoc className="h-3.5 w-3.5 text-amber" />
-                wasee-importer/ · 11 файлов
+                <IconWrench className="h-3.5 w-3.5 text-amber" />
+                файлы плагина
               </span>
-              <span className="font-mono text-[10.5px] text-faint">≈ 67.7 KB</span>
+              <span className="font-mono text-[10.5px] text-faint">{PLUGIN_FILES.length} шт.</span>
             </div>
-            <ul className="flex-1 divide-y divide-line/60">
+            <ul className="max-h-[460px] flex-1 divide-y divide-line/60 overflow-y-auto">
               {PLUGIN_FILES.map((f) => (
                 <li key={f.path} className="group px-4 py-2.5 transition-colors hover:bg-panel2/60">
-                  <div className="flex items-center gap-2">
-                    <IconFile className={`h-3.5 w-3.5 shrink-0 ${KIND_CLS[f.kind]}`} />
-                    <code className="truncate font-mono text-[11.5px] text-fog">{f.path}</code>
-                    <span className="ml-auto shrink-0 font-mono text-[10px] tabular-nums text-faint">{f.size}</span>
+                  <div className="flex items-baseline gap-2.5">
+                    <IconFile className={`h-3.5 w-3.5 shrink-0 translate-y-0.5 ${KIND_CLS[f.kind]}`} />
+                    <code className="min-w-0 truncate font-mono text-[11.5px] text-fog" title={f.path}>
+                      {f.path}
+                    </code>
+                    <span className="ml-auto shrink-0 font-mono text-[10px] text-faint">{f.size}</span>
                   </div>
-                  <p className="mt-1 pl-5.5 text-[11.5px] leading-snug text-faint transition-colors group-hover:text-dim">
+                  <p className="mt-1 pl-6 text-[11px] leading-snug text-faint transition-colors group-hover:text-dim">
                     {f.desc}
                   </p>
                 </li>
@@ -119,55 +116,26 @@ export default function ReportSection() {
         </Reveal>
       </div>
 
-      {/* install steps + requirements */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-12">
-        <Reveal className="lg:col-span-7">
-          <div className="h-full border border-line bg-panel/70 p-5">
-            <h3 className="font-mono text-[11px] uppercase tracking-[0.22em] text-amber">
-              установка и запуск · 6 шагов
-            </h3>
-            <ol className="mt-4 grid gap-x-8 gap-y-5 sm:grid-cols-2">
-              {INSTALL_STEPS.map((s, i) => (
-                <li key={s.title} className="group flex gap-3.5">
-                  <span className="font-display text-2xl font-bold leading-none text-line2 transition-colors group-hover:text-amber">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span>
-                    <span className="block text-[13.5px] font-semibold text-fog">{s.title}</span>
-                    <span className="mt-1 block text-[12px] leading-relaxed text-dim">{s.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
+      {/* установка */}
+      <Reveal delay={120} className="mt-6">
+        <div className="border border-line bg-panel/50">
+          <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-dim">установка · 6 шагов</span>
+            <span className="font-mono text-[10.5px] text-faint">требования: PHP 7.2+ · WP 5.0+ · Astra (уже есть)</span>
           </div>
-        </Reveal>
-
-        <Reveal delay={120} className="lg:col-span-5">
-          <div className="flex h-full flex-col gap-5">
-            <div className="border border-line bg-panel/70 p-5">
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.22em] text-cyan">требования</h3>
-              <div className="mt-3.5 flex flex-wrap gap-2">
-                {["PHP 7.2+", "WordPress 5.0+", "ACF / ACF Pro", "MySQL 5.7+", "cURL", "DOMDocument + XPath", "WP-cron (опц.)"].map((r) => (
-                  <TagChip key={r} tone="cyan">{r}</TagChip>
-                ))}
-              </div>
-              <p className="mt-4 text-[12.5px] leading-relaxed text-dim">
-                ACF Pro нужен только для repeater-поля «specifications»; на бесплатной ACF плагин автоматически
-                переключается на сериализованное мета-поле <code className="font-mono text-[11px] text-cyan">_wasee_specs</code>.
-              </p>
-            </div>
-            <div className="flex-1 border border-mint/35 bg-mint/[0.05] p-5">
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.22em] text-mint">тема — не клон</h3>
-              <p className="mt-3 text-[12.5px] leading-relaxed text-dim">
-                Рекомендуется <span className="font-semibold text-fog">Astra 4.6</span> с child-темой{" "}
-                <code className="font-mono text-[11px] text-mint">faseen-core</code>: стартовый шаблон «Electronics»
-                перерабатывается в собственный технический стиль — акцент на таблицах характеристик и артикулах,
-                а не на копиях вёрстки faseen.com.
-              </p>
-            </div>
-          </div>
-        </Reveal>
-      </div>
+          <ol className="grid gap-px bg-line/60 sm:grid-cols-2 lg:grid-cols-3">
+            {INSTALL_STEPS.map((s, i) => (
+              <li key={s.title} className="group relative bg-panel p-5 transition-colors hover:bg-panel2">
+                <span className="font-display text-3xl font-bold text-line2 transition-colors group-hover:text-amber/60">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h4 className="mt-2 font-display text-[15px] font-semibold text-fog">{s.title}</h4>
+                <p className="mt-1.5 text-[12px] leading-relaxed text-dim">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </Reveal>
     </section>
   );
 }

@@ -1,6 +1,9 @@
 /* ============================================================
-   Датасет, собранный плагином-разведчиком с waseegroup.com
-   (OpenCart 3.0.3.8) и структурой faseen.com (WordPress + ACF)
+   Датасет консоли миграции
+   Источник: waseegroup.com (OpenCart 3.0.3.8) — снято парсером
+   Цель: faseen.com — ГОЛЫЙ WordPress 6.5 + тема Astra, и всё.
+   Никаких CPT / ACF / таксономий на цели нет — плагин
+   wasee-importer регистрирует всё сам при активации.
    ============================================================ */
 
 export const IMG = {
@@ -16,7 +19,7 @@ export const IMG = {
 };
 
 export const FALLBACK_IMG =
-  "data:image/svg+xml;utf8," +
+  "image/svg+xml;utf8," +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#121A2B"/><circle cx="100" cy="92" r="34" fill="none" stroke="#2E4066" stroke-width="4"/><circle cx="100" cy="92" r="12" fill="#2E4066"/><rect x="60" y="140" width="80" height="8" rx="2" fill="#223050"/><text x="100" y="172" font-family="monospace" font-size="11" fill="#5C6C8F" text-anchor="middle">image offline</text></svg>`
   );
@@ -25,7 +28,7 @@ export type Category = {
   id: string;
   name: string;
   path: string; // OpenCart path=60_XXX
-  slug: string; // целевой term slug в faseen.com
+  slug: string; // term slug, который создаст плагин
   ru: string;
 };
 
@@ -692,7 +695,7 @@ export const TOTAL_IMAGES = PRODUCTS.reduce((n, p) => n + 1 + (p.image2 ? 1 : 0)
 export const TOTAL_SPEC_ROWS = PRODUCTS.reduce((n, p) => n + p.specs.length, 0);
 export const catCount = (id: string) => PRODUCTS.filter((p) => p.cat === id).length;
 
-/* ---------- маппинг полей OpenCart → WP / ACF ---------- */
+/* ---------- маппинг полей OpenCart → WP (мета) / ACF ---------- */
 
 export type FieldMap = {
   src: string;
@@ -704,55 +707,53 @@ export type FieldMap = {
 export const FIELD_MAPS: FieldMap[] = [
   { src: "<h1> .item h1", target: "post_title", type: "string", sample: "2MP 4IN1 Camera Module" },
   { src: ".item__galleryLeft img@src", target: "_thumbnail_id · media_sideload", type: "media", sample: "Y20F-460x330.jpg → /uploads/2025/11/" },
-  { src: ".item__galleryRight img@src[]", target: "acf.gallery[]", type: "media[]", sample: "Y20B-85x51.jpg, DB-Y20-rear.jpg" },
-  { src: ".item__galleryText", target: "acf.description + post_excerpt", type: "text", sample: "Компактный 4-в-1 модуль камеры…" },
-  { src: "table.specs tr td:nth(0)", target: "acf.specifications[].spec_name", type: "repeater", sample: "Image sensor" },
-  { src: "table.specs tr td:nth(1)", target: "acf.specifications[].spec_value", type: "repeater", sample: "1/2.7\" Progressive CMOS" },
+  { src: ".item__galleryRight img@src[]", target: "wasee_gallery (ids) · ACF gallery, если Pro", type: "media[]", sample: "Y20B-85x51.jpg, DB-Y20-rear.jpg" },
+  { src: ".item__galleryText", target: "post_content + post_excerpt", type: "text", sample: "Компактный 4-в-1 модуль камеры…" },
+  { src: "table.specs tr td:nth(0)", target: "wasee_specifications[].[name]", type: "meta · repeater", sample: "Image sensor" },
+  { src: "table.specs tr td:nth(1)", target: "wasee_specifications[].[value]", type: "meta · repeater", sample: "1/2.7\" Progressive CMOS" },
   { src: "category path=60_XXX", target: "wp_set_object_terms → product_category", type: "term", sample: "60_112 → 4in1-hybrid-modules" },
-  { src: "URL param product_id", target: "acf.legacy_product_id", type: "int", sample: "306" },
-  { src: "URL страницы", target: "acf.legacy_url", type: "url", sample: "waseegroup.com/?route=product/product&product_id=306" },
+  { src: "URL param product_id", target: "wasee_legacy_id (meta)", type: "int", sample: "306" },
+  { src: "URL страницы", target: "wasee_legacy_url (meta)", type: "url", sample: "waseegroup.com/?route=product/product&product_id=306" },
 ];
 
-/* ---------- разведка faseen.com (отчёт wasee-scout) ---------- */
+/* ---------- цель: голый WordPress + Astra ---------- */
 
-export const SCOUT = {
+export const TARGET = {
   site: "faseen.com",
-  engine: "WordPress 6.5.2 · PHP 8.1",
-  postTypes: [
-    { name: "product", label: "Товары", before: 0, after: PRODUCTS.length, supports: ["title", "editor", "thumbnail", "custom-fields"] },
+  engine: "WordPress 6.5.2 · PHP 8.1 · MySQL 8.0",
+  theme: "Astra 4.6.2 — единственное, что стоит на сайте",
+  state: [
+    { key: "Ядро WordPress", value: "6.5.2", status: "ok" as const },
+    { key: "Тема", value: "Astra 4.6.2 (голая, без настроек)", status: "ok" as const },
+    { key: "Плагины", value: "не установлены", status: "none" as const },
+    { key: "Custom Post Types", value: "нет — плагин создаст «product»", status: "missing" as const },
+    { key: "Таксономии", value: "только стандартные — плагин добавит product_category", status: "missing" as const },
+    { key: "ACF / ACF Pro", value: "не установлен — плагин работает и без него", status: "optional" as const },
+    { key: "Контент", value: "пусто, 0 записей", status: "none" as const },
   ],
-  acfGroups: [
-    {
-      title: "Product Data",
-      key: "group_65a3f2c1b4d09",
-      location: "post_type == product",
-      fields: [
-        { name: "product_code", label: "Артикул", type: "text" },
-        { name: "legacy_product_id", label: "OpenCart ID", type: "number" },
-        { name: "legacy_url", label: "Старый URL", type: "url" },
-        { name: "sensor_type", label: "Сенсор", type: "text" },
-        { name: "max_resolution", label: "Разрешение", type: "text" },
-        { name: "video_standards", label: "Стандарты", type: "checkbox" },
-        { name: "specifications", label: "Характеристики", type: "repeater [spec_name, spec_value]" },
-        { name: "gallery", label: "Галерея", type: "gallery" },
-      ],
-    },
+  creates: [
+    "register_post_type( 'product', [ 'public' => true, 'has_archive' => true, 'menu_icon' => 'dashicons-camera', 'supports' => [ 'title', 'editor', 'thumbnail', 'custom-fields' ], 'show_in_rest' => true ] )",
+    "register_taxonomy( 'product_category', 'product', [ 'hierarchical' => true, 'show_in_rest' => true ] ) · 10 терминов создаёт импортер",
+    "register_meta: wasee_product_code · wasee_legacy_id · wasee_legacy_url · wasee_specifications (сериализованный массив) · wasee_gallery (id вложений)",
+    "acf_add_local_field_group( 'Product Data' ) — только если ACF обнаружен; Free-версия без repeater читает те же мета-поля",
+    "Шаблоны под Astra: templates/archive-product.php + single-product.php — собственный B2B-дизайн, не клон faseen",
+    "flush_rewrite_rules() при активации: ЧПУ /product/<slug> сразу рабочим",
   ],
-  taxonomies: [
-    { name: "product_category", label: "Категории товаров", object: "product", terms: CATEGORIES.length, hierarchical: true },
-  ],
-  rest: "/wp-json/wasee/v1/import-status",
+  fallback:
+    "Без ACF данные лежат в нативных мета-полях — Astra-шаблоны плагина читают их напрямую. Поставите ACF позже — плагин сам синхронизирует мета в поля группы «Product Data».",
 };
 
 /* ---------- файлы плагина wasee-importer ---------- */
 
-export const PLUGIN_FILES: { path: string; desc: string; size: string; kind: "php" | "css" | "js" | "txt" | "dir" }[] = [
-  { path: "wasee-importer/wasee-importer.php", kind: "php", size: "6.2 KB", desc: "Бутстрап: регистрация CPT «product», таксономии, админ-меню, хуки активации" },
-  { path: "includes/class-wasee-scout.php", kind: "php", size: "4.8 KB", desc: "Разведчик: дамп CPT / ACF-групп / таксономий в JSON-отчёт" },
-  { path: "includes/class-wasee-parser.php", kind: "php", size: "9.4 KB", desc: "cURL + DOMDocument/XPath: обход категорий path=60_*, извлечение товара" },
-  { path: "includes/class-wasee-mapper.php", kind: "php", size: "5.1 KB", desc: "Маппинг OpenCart → ACF, нормализация slug'ов, транслитерация" },
+export const PLUGIN_FILES: { path: string; desc: string; size: string; kind: "php" | "css" | "js" | "txt" }[] = [
+  { path: "wasee-importer/wasee-importer.php", kind: "php", size: "6.2 KB", desc: "Бутстрап: хук активации, регистрация CPT и таксономии, админ-меню" },
+  { path: "includes/class-wasee-setup.php", kind: "php", size: "5.6 KB", desc: "Регистрирует «product», product_category, мета-ключи; ACF-группу — если ACF есть" },
+  { path: "includes/class-wasee-parser.php", kind: "php", size: "9.4 KB", desc: "cURL + DOMDocument/XPath: обход категорий path=60_*, извлечение блока .item" },
+  { path: "includes/class-wasee-mapper.php", kind: "php", size: "5.1 KB", desc: "Маппинг OpenCart → мета/ACF, нормализация slug'ов, транслитерация" },
   { path: "includes/class-wasee-importer.php", kind: "php", size: "11.3 KB", desc: "wp_insert_post, media_sideload_image, привязка терминов, ре-импорт" },
   { path: "includes/class-wasee-log.php", kind: "php", size: "3.2 KB", desc: "Журнал операций в таблицу wp_wasee_import_log" },
+  { path: "templates/single-product.php", kind: "php", size: "7.8 KB", desc: "Страница товара под Astra: спецификации, галерея — уникальный дизайн" },
+  { path: "templates/archive-product.php", kind: "php", size: "6.4 KB", desc: "Архив с фильтрами по категориям, сетка карточек" },
   { path: "admin/class-wasee-admin.php", kind: "php", size: "7.6 KB", desc: "Админ-страница «Инструменты → Wasee Import», AJAX-батчи по 5 товаров" },
   { path: "admin/views/page-import.php", kind: "php", size: "8.9 KB", desc: "UI: прогресс, живой лог, перемаппинг полей, кнопки ре-импорта" },
   { path: "assets/admin.css", kind: "css", size: "3.4 KB", desc: "Стили админки в духе технического консоля" },
@@ -761,12 +762,12 @@ export const PLUGIN_FILES: { path: string; desc: string; size: string; kind: "ph
 ];
 
 export const INSTALL_STEPS: { title: string; text: string }[] = [
-  { title: "Загрузить плагин", text: "Копию папки wasee-importer — в /wp-content/plugins/, активировать в админке. Плагины-разведчики не требуют: класс scout уже встроен." },
-  { title: "Подготовить faseen.com", text: "Тема Astra 4.6 (или GeneratePress), ACF Pro для repeater-поля «specifications». CPT «product» и таксономия регистрируются самим плагином при активации." },
-  { title: "Запустить разведку", text: "Инструменты → Wasee Import → «Разведка структуры». Плагин соберёт отчёт о CPT, ACF-группах и таксономиях и сверит его с ожидаемым маппингом." },
-  { title: "Проверить маппинг", text: "Вкладка «Маппинг»: селекторы OpenCart слева, поля ACF справа. Правки сохраняются в wp_options и переживают обновления плагина." },
-  { title: "Тестовый импорт", text: "Импортировать один товар (product_id=281). Проверить картинку в медиатеке, repeater характеристик и термин категории." },
-  { title: "Полный импорт", text: "Запустить батчи по 5 товаров через AJAX. Прогресс и лог — в реальном времени; при обрыве — «Доимпортировать пропущенные»." },
+  { title: "Загрузить плагин", text: "Папку wasee-importer — в /wp-content/plugins/ и активировать. Больше на faseen.com ничего ставить не нужно: тема Astra уже есть, этого достаточно." },
+  { title: "Активация = регистрация", text: "При активации плагин сам создаёт CPT «product», таксономию product_category и мета-ключи. ACF не обязателен — с ним плагин дополнительно соберёт группу «Product Data»." },
+  { title: "Проверить маппинг", text: "Инструменты → Wasee Import → «Маппинг»: селекторы OpenCart слева, мета/ACF-поля справа. Правки живут в wp_options и переживают обновления." },
+  { title: "Тестовый импорт", text: "Один товар, product_id=281. Проверить миниатюру в медиатеке, сериализованные характеристики и термин 4in1-hybrid-modules." },
+  { title: "Полный импорт", text: "Батчи по 5 товаров через admin-ajax, прогресс и лог в реальном времени. При обрыве — «Доимпортировать пропущенные»." },
+  { title: "Фронтенд", text: "Шаблоны плагина отдают страницам товара уникальный B2B-дизайн внутри Astra — без клонирования старого сайта. Включить ЧПУ и 301-редиректы со старых URL." },
 ];
 
 /* ---------- сценарий симуляции импорта ---------- */
@@ -799,12 +800,14 @@ export function buildImportScript(): Ev[] {
   // ── разведка ──
   stage("scout"); progress(3);
   log("sys", "wasee-importer v1.4.2 — запуск сессии импорта");
-  log("info", "Подключение к waseegroup.com (OpenCart 3.0.3.8) …", 420);
+  log("info", "цель: faseen.com — голый WP 6.5 + Astra, плагинов 0", 300);
+  log("ok", "setup: CPT «product» + product_category + мета-ключи зарегистрированы", 260);
+  log("info", "ACF не обнаружен → режим: нативные мета-поля (совместимо с Free)", 220);
+  log("info", "Подключение к waseegroup.com (OpenCart 3.0.3.8) …", 380);
   log("ok", "HTTP 200 · ответ 312 ms · TLS 1.3", 260);
-  log("info", "Чтение sitemap: route=product/category", 300);
   progress(6);
   for (const c of CATEGORIES) {
-    log("info", `category path=${c.path} → ${c.name} · ${catCount(c.id)} тов.`, 150);
+    log("info", `category path=${c.path} → ${c.name} · ${catCount(c.id)} тов.`, 140);
   }
   log("ok", `Разведка: 10 категорий, ${PRODUCTS.length} товаров, ${TOTAL_IMAGES} изображений`, 260);
   progress(10);
@@ -834,7 +837,7 @@ export function buildImportScript(): Ev[] {
       log("ok", `media product_id=310: исходник найден, sideload OK (${kb + 12} KB)`, 140);
     } else {
       log("info", `media sideload: ${p.model.toLowerCase()}-main.jpg → /uploads/2025/11/ (${kb} KB)`, 84);
-      if (p.image2) log("info", `media sideload: ${p.model.toLowerCase()}-alt.jpg → gallery`, 60);
+      if (p.image2) log("info", `media sideload: ${p.model.toLowerCase()}-alt.jpg → wasee_gallery`, 60);
     }
     if (i % 9 === 8) progress(44 + Math.round((i / PRODUCTS.length) * 24));
   });
@@ -845,7 +848,7 @@ export function buildImportScript(): Ev[] {
   stage("map");
   PRODUCTS.forEach((p, i) => {
     status(p.pid, "map"); t += 40;
-    if (i % 5 === 0) log("info", `map: ${p.model} → ACF group_65a3f2c1 · repeater specifications [${p.specs.length}]`, 110);
+    if (i % 5 === 0) log("info", `map: ${p.model} → wasee_specifications [${p.specs.length} строк] · term ${CATEGORIES.find((c) => c.id === p.cat)?.slug}`, 110);
   });
   progress(82);
   log("ok", "Маппинг: 9 правил применено, конфликтов 0", 180);
@@ -854,14 +857,14 @@ export function buildImportScript(): Ev[] {
   stage("import");
   PRODUCTS.forEach((p, i) => {
     status(p.pid, "done"); t += 70;
-    log("ok", `wp_insert_post «${p.name}» → post_id=${4180 + i} ✓ · term: ${CATEGORIES.find((c) => c.id === p.cat)?.slug}`, 104);
+    log("ok", `wp_insert_post «${p.name}» → post_id=${4180 + i} ✓ · CPT «product»`, 104);
     progress(82 + Math.round(((i + 1) / PRODUCTS.length) * 17));
   });
   progress(100);
   stage("done");
   log("sys", `Миграция завершена: ${PRODUCTS.length} постов · ${TOTAL_IMAGES} медиа · ${TOTAL_SPEC_ROWS} spec-строк`, 260);
   log("warn", "1 медиаресурс импортирован после повтора (product_id=310)", 140);
-  log("ok", "Фаза 2 (не обязательна): настроить 301-редиректы legacy_url → новый ЧПУ", 200);
+  log("ok", "Финал: flush_rewrite_rules + 301-редиректы со старых URL готовы", 200);
 
   return ev;
 }

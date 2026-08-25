@@ -93,8 +93,8 @@ function Schematic() {
           x={720}
           accent="#3DDC97"
           title="faseen.com"
-          sub="WordPress 6.5 + ACF"
-          sub2="CPT: product · 10 terms"
+          sub="голый WP 6.5 · Astra 4.6"
+          sub2="плагин создаёт CPT + fields"
           icon={
             <>
               <circle cx="10" cy="10" r="8.5" />
@@ -212,7 +212,7 @@ export default function Overview() {
               Консоль переноса промышленных камер-модулей с OpenCart-витрины waseegroup.com в WordPress + ACF на
               faseen.com. Парсер снимает <span className="text-fog">название, галерею, описание и таблицу
               характеристик</span> из блока <code className="border border-line2 bg-panel px-1.5 py-0.5 font-mono text-[12px] text-cyan">.item</code>,
-              маппер раскладывает данные по ACF-полям, импортер пишет посты батчами через admin-ajax.
+              маппер раскладывает данные по мета-полям (а если появится ACF — по его полям), импортер пишет посты батчами через admin-ajax.
             </p>
           </Reveal>
           <Reveal delay={260}>
@@ -243,11 +243,10 @@ export default function Overview() {
             <dl className="divide-y divide-line/70 font-mono text-[12px]">
               {[
                 ["source", "waseegroup.com · /image/cache/data/products/faseen/"],
-                ["target", "faseen.com · /wp-json/wasee/v1/import-status"],
-                ["CPT", "product (has_archive, custom-fields)"],
-                ["taxonomy", "product_category · hierarchical"],
-                ["ACF group", "group_65a3f2c1b4d09 «Product Data»"],
-                ["batch", "5 товаров / AJAX-запрос"],
+                ["endpoint", "wp-admin/admin-ajax.php · action=wasee_batch"],
+["target", "голый WP 6.5 + Astra — и всё, плагинов 0"],
+["CPT / terms", "«product» + product_category — регистрирует плагин"],
+["acf", "опционально: группа «Product Data» или фолбэк на мета"],                ["batch", "5 товаров / AJAX-запрос"],
                 ["retries", "media 404 → 2 повтора"],
                 ["режим", "не клон: уникальная вёрстка B2B"],
               ].map(([k, v]) => (

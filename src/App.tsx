@@ -13,12 +13,12 @@ const FOOTER_NAV = [
   { id: "import", label: "Консоль импорта" },
   { id: "catalog", label: "Каталог источника" },
   { id: "mapping", label: "Маппинг полей" },
-  { id: "report", label: "Разведка faseen.com" },
+  { id: "report", label: "Цель: голый WP + Astra" },
 ];
 
 const QUICK_CMDS = [
   "wp plugin activate wasee-importer",
-  "wp wasee scout --format=json",
+  "wp wasee setup --register-cpt",
   "wp wasee import --batch=5 --dry-run",
   "wp wasee import --resume-missing",
   "wp wasee redirect:generate --301",
@@ -71,8 +71,8 @@ export default function App() {
               </span>
             </div>
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-dim">
-              Демонстрационная консоль миграции промышленных камер-модулей: OpenCart → WordPress + ACF.
-              Уникальный B2B-дизайн — не клон faseen.com.
+              Демонстрационная консоль миграции промышленных камер-модулей: OpenCart → голый WordPress + Astra.
+              Плагин регистрирует CPT, таксономию и поля сам; ACF не обязателен.
             </p>
             <div className="mt-4 flex gap-2 font-mono text-[10.5px]">
               <span className="border border-line2 px-2 py-1 text-dim">v1.4.2</span>

@@ -10,9 +10,18 @@ export default function MappingSection() {
       <SectionHead
         index="04"
         kicker="правила переноса"
-        title="Маппинг OpenCart → ACF"
+        title="Маппинг OpenCart → WP"
         note="9 правил, сохранённых в wp_options (wasee_field_maps). Правки из админки переживают обновления плагина; конфликт-детектор сверяет селекторы с живой разметкой."
       />
+
+      <Reveal className="mb-6">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border border-cyan/30 bg-cyan/[0.05] px-5 py-3 font-mono text-[11px] text-dim">
+          <span className="uppercase tracking-[0.2em] text-cyan">цель голая</span>
+          <span>ACF на faseen.com не установлен — маппер пишет нативные мета-поля <code className="text-fog">wasee_*</code></span>
+          <span className="text-faint">·</span>
+          <span>появится ACF/Pro — плагин сам соберёт группу «Product Data» и синхронизирует repeater</span>
+        </div>
+      </Reveal>
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* field mapping table */}
@@ -87,9 +96,8 @@ export default function MappingSection() {
       <Reveal delay={140} className="mt-6">
         <div className="flex flex-wrap items-center gap-4 border border-amber/40 bg-amber/[0.06] px-5 py-4">
           <IconWarn className="h-5 w-5 shrink-0 text-amber" />
-          <p className="min-w-0 flex-1 text-[13.5px] leading-relaxed text-dim">
-            <span className="font-semibold text-amber">После импорта:</span> плагин генерирует правила 301-редиректов{" "}
-            <code className="border border-line2 bg-ink px-1.5 py-0.5 font-mono text-[11.5px] text-cyan">
+            <p className="min-w-0 flex-1 text-[13.5px] leading-relaxed text-dim">
+            <span className="font-semibold text-amber">После импорта:</span> плагин делает flush_rewrite_rules и генерирует 301-редиректы{" "}            <code className="border border-line2 bg-ink px-1.5 py-0.5 font-mono text-[11.5px] text-cyan">
               ?route=product/product&product_id=NNN → /product/&lt;slug&gt;
             </code>{" "}
             — поля <code className="font-mono text-[11.5px] text-cyan">acf.legacy_product_id</code> и{" "}

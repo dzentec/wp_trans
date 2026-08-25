@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 const LINES = [
   "$ wasee-importer --source=waseegroup.com --target=faseen.com",
   "▸ соединение с OpenCart 3.0.3.8 ............... OK · 312 ms",
+  "▸ цель: голый WP + Astra → регистрация CPT ....... OK",
   "▸ разведка: 10 категорий / 29 товаров / 36 медиа  OK",
-  "▸ маппинг ACF: 9 правил, конфликтов 0 .......... OK",
-  "▸ тема: Astra 4.6 · режим: не клон ............. OK",
+  "▸ маппинг meta/ACF: 9 правил, конфликтов 0 ....... OK",
   "▸ запуск консоли миграции _",
 ];
 

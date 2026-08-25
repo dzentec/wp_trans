@@ -18,7 +18,7 @@ const STAGES: { id: Stage; label: string }[] = [
   { id: "scout", label: "Разведка" },
   { id: "parse", label: "Парсинг" },
   { id: "media", label: "Медиатека" },
-  { id: "map", label: "Маппинг ACF" },
+  { id: "map", label: "Маппинг meta/ACF" },
   { id: "import", label: "Запись в WP" },
 ];
 const ORDER: Stage[] = ["scout", "parse", "media", "map", "import"];

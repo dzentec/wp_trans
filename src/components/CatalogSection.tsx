@@ -7,18 +7,18 @@ const onImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
   if (e.currentTarget.src !== FALLBACK_IMG) e.currentTarget.src = FALLBACK_IMG;
 };
 
-function acfPayload(p: Product): string {
+function importPayload(p: Product): string {
   const cat = CATEGORIES.find((c) => c.id === p.cat);
   const payload = {
     post_type: "product",
     post_title: p.name,
     terms: { product_category: [cat?.slug] },
-    acf: {
-      product_code: p.model,
-      legacy_product_id: p.pid,
-      legacy_url: `https://www.waseegroup.com/?route=product/product&product_id=${p.pid}`,
-      specifications: p.specs.map(([spec_name, spec_value]) => ({ spec_name, spec_value })),
-      gallery: p.image2 ? [`${p.model.toLowerCase()}-main.jpg`, `${p.model.toLowerCase()}-alt.jpg`] : [`${p.model.toLowerCase()}-main.jpg`],
+    meta: {
+      wasee_product_code: p.model,
+      wasee_legacy_id: p.pid,
+      wasee_legacy_url: `https://www.waseegroup.com/?route=product/product&product_id=${p.pid}`,
+      wasee_specifications: p.specs.map(([name, value]) => ({ name, value })),
+      wasee_gallery: p.image2 ? [`${p.model.toLowerCase()}-main.jpg`, `${p.model.toLowerCase()}-alt.jpg`] : [`${p.model.toLowerCase()}-main.jpg`],
     },
   };
   return JSON.stringify(payload, null, 2);
@@ -27,7 +27,7 @@ function acfPayload(p: Product): string {
 function Drawer({ product, onClose }: { product: Product; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   const cat = CATEGORIES.find((c) => c.id === product.cat);
-  const payload = useMemo(() => acfPayload(product), [product]);
+  const payload = useMemo(() => importPayload(product), [product]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -104,7 +104,7 @@ function Drawer({ product, onClose }: { product: Product; onClose: () => void })
           <div className="mt-7">
             <div className="flex items-center justify-between">
               <h4 className="font-mono text-[11px] uppercase tracking-[0.22em] text-cyan">
-                превью ACF-payload
+                payload импорта · meta
               </h4>
               <button
                 onClick={copy}
@@ -120,8 +120,9 @@ function Drawer({ product, onClose }: { product: Product; onClose: () => void })
               {payload}
             </pre>
             <p className="mt-3 text-xs leading-relaxed text-faint">
-              Именно этот объект собирает class-wasee-mapper.php и передаёт в class-wasee-importer.php: repeater
-              «specifications» создаётся одним update_field, галерея — через media_sideload_image.
+              Именно этот объект собирает class-wasee-mapper.php и передаёт в class-wasee-importer.php:
+              характеристики пишутся в мета-поле wasee_specifications одним update_post_meta, галерея — через
+              media_sideload_image. Если на сайте появится ACF — плагин сам синхронизирует мета в поля группы «Product Data».
             </p>
           </div>
         </div>
