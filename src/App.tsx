@@ -4,6 +4,7 @@ import ConsoleSection from "./components/ConsoleSection";
 import DocsSection from "./components/DocsSection";
 import GuideSection from "./components/GuideSection";
 import MappingSection from "./components/MappingSection";
+import SitemapSection from "./components/SitemapSection";
 import Overview from "./components/Overview";
 import ReportSection from "./components/ReportSection";
 import StatusBar from "./components/StatusBar";
@@ -14,6 +15,7 @@ const FOOTER_NAV = [
   { id: "overview", label: "Обзор операции" },
   { id: "import", label: "Консоль импорта" },
   { id: "catalog", label: "Каталог источника" },
+  { id: "sitemap", label: "Меню и страницы" },
   { id: "mapping", label: "Маппинг полей" },
   { id: "report", label: "Цель: голый WP + Astra" },
   { id: "guide", label: "Гайд по использованию" },
@@ -53,6 +55,8 @@ export default function App() {
         <ConsoleSection />
         <div className="mx-auto h-px max-w-[1360px] bg-gradient-to-r from-transparent via-line2 to-transparent" />
         <CatalogSection />
+        <div className="mx-auto h-px max-w-[1360px] bg-gradient-to-r from-transparent via-line2 to-transparent" />
+        <SitemapSection />
         <div className="mx-auto h-px max-w-[1360px] bg-gradient-to-r from-transparent via-line2 to-transparent" />
         <MappingSection />
         <div className="mx-auto h-px max-w-[1360px] bg-gradient-to-r from-transparent via-line2 to-transparent" />

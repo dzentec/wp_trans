@@ -695,6 +695,143 @@ export const TOTAL_IMAGES = PRODUCTS.reduce((n, p) => n + 1 + (p.image2 ? 1 : 0)
 export const TOTAL_SPEC_ROWS = PRODUCTS.reduce((n, p) => n + p.specs.length, 0);
 export const catCount = (id: string) => PRODUCTS.filter((p) => p.cat === id).length;
 
+/* ---------- зеркало меню оригинального сайта ---------- */
+
+export type MenuKind = "home" | "catalog" | "term" | "page" | "service";
+
+export type MenuEntry = {
+  id: string;
+  label: string;
+  original: string;
+  target: string;
+  obj: string;
+  kind: MenuKind;
+  build: string;
+  content: string[];
+};
+
+export const MENU_MAIN: MenuEntry[] = [
+  {
+    id: "home",
+    label: "Home",
+    kind: "home",
+    original: "waseegroup.com/ · route=common/home",
+    target: "faseen.com/",
+    obj: "страница «Home» · static front_page",
+    build: "wp_insert_post( page ) + update_option( 'page_on_front' ) при активации",
+    content: [
+      "интро-блок: OEM/ODM камерные модули",
+      "сетка Featured Products (term featured-products)",
+      "плитки 10 категорий со счётчиками",
+      "блок о компании + ссылка на About Us",
+    ],
+  },
+  {
+    id: "catalog",
+    label: "Products",
+    kind: "catalog",
+    original: "?route=product/category&path=60",
+    target: "/products/",
+    obj: "архив CPT «product» (has_archive)",
+    build: "шаблон templates/archive-product.php из плагина — дизайн не клон",
+    content: [
+      "все 29 позиций единой сеткой",
+      "фильтр по 10 категориям",
+      "хлебные крошки Home → Products",
+    ],
+  },
+  ...CATEGORIES.map((c): MenuEntry => ({
+    id: `term-${c.id}`,
+    label: c.name,
+    kind: "term",
+    original: `?route=product/category&path=${c.path}`,
+    target: `/product-category/${c.slug}/`,
+    obj: `терм «${c.slug}» · таксономия product_category`,
+    build: "wp_insert_term при импорте категории + пункт меню-потомок «Products»",
+    content: [
+      "заголовок категории с описанием из OpenCart",
+      `${catCount(c.id)} ${catCount(c.id) === 1 ? "товар" : "товара(ов)"} сеткой`,
+      "ссылка «Все товары» → /products/",
+    ],
+  })),
+  {
+    id: "about",
+    label: "About Us",
+    kind: "page",
+    original: "?route=information/information&information_id=4",
+    target: "/about-us/",
+    obj: "страница «About Us»",
+    build: "wp_insert_post( page ); текст парсится со страницы оригинала",
+    content: [
+      "текст компании с waseegroup.com",
+      "фото и сертификаты — если есть на оригинале",
+      "макет Astra по умолчанию",
+    ],
+  },
+  {
+    id: "contact",
+    label: "Contact Us",
+    kind: "page",
+    original: "?route=information/information&information_id=5",
+    target: "/contact-us/",
+    obj: "страница + форма [wasee_contact]",
+    build: "wp_insert_post( page ) + шорткод плагина — без сторонних плагинов",
+    content: [
+      "реквизиты и адрес из оригинала",
+      "форма заявки: имя · e-mail · сообщение",
+      "отправка админу через wp_mail()",
+    ],
+  },
+];
+
+export const MENU_SERVICE: MenuEntry[] = [
+  {
+    id: "account",
+    label: "My Account",
+    kind: "service",
+    original: "?route=account/login",
+    target: "— · 301 → /",
+    obj: "не переносится",
+    build: "витрина B2B без кабинетов — редирект на главную",
+    content: ["на оригинале — OpenCart-аккаунт", "на faseen.com кабинет не нужен: заявки идут через Contact Us"],
+  },
+  {
+    id: "cart",
+    label: "Shopping Cart",
+    kind: "service",
+    original: "?route=checkout/cart",
+    target: "— · 301 → /",
+    obj: "не переносится",
+    build: "корзины нет — каталог-витрина, редирект на главную",
+    content: ["WooCommerce не ставим: цель остаётся голой", "цены — по запросу, как принято в B2B"],
+  },
+  {
+    id: "checkout",
+    label: "Checkout",
+    kind: "service",
+    original: "?route=checkout/checkout",
+    target: "— · 301 → /",
+    obj: "не переносится",
+    build: "оформления заказа нет — редирект на главную",
+    content: ["сделки закрываются менеджером после заявки", "форма заявки — на /contact-us/"],
+  },
+];
+
+export const PAGE_MAP: { orig: string; next: string; obj: string; note: string; drop?: boolean }[] = [
+  { orig: "waseegroup.com/ · route=common/home", next: "/", obj: "страница «Home» + front_page", note: "плагин создаёт страницу и пункт меню №1" },
+  { orig: "?route=product/category&path=60", next: "/products/", obj: "архив CPT «product»", note: "has_archive + archive-product.php" },
+  ...CATEGORIES.map((c) => ({
+    orig: `?route=product/category&path=${c.path}`,
+    next: `/product-category/${c.slug}/`,
+    obj: "терм таксономии",
+    note: `${c.name} · ${catCount(c.id)} тов.`,
+  })),
+  { orig: "?route=product/product&product_id=281…316", next: "/product/<slug>/", obj: "CPT single ×29", note: "single-product.php + 301 со старых URL" },
+  { orig: "?route=information/information&information_id=4", next: "/about-us/", obj: "страница «About Us»", note: "текст со страницы оригинала" },
+  { orig: "?route=information/information&information_id=5", next: "/contact-us/", obj: "страница + [wasee_contact]", note: "форма заявки плагина, без сторонних плагинов" },
+  { orig: "?route=checkout/cart · checkout · account/login", next: "—", obj: "не переносятся", note: "витрина без корзины: 301 → /", drop: true },
+];
+
 /* ---------- маппинг полей OpenCart → WP (мета) / ACF ---------- */
 
 export type FieldMap = {
@@ -738,6 +875,8 @@ export const TARGET = {
     "acf_add_local_field_group( 'Product Data' ) — только если ACF обнаружен; Free-версия без repeater читает те же мета-поля",
     "Шаблоны под Astra: templates/archive-product.php + single-product.php — собственный B2B-дизайн, не клон faseen",
     "flush_rewrite_rules() при активации: ЧПУ /product/<slug> сразу рабочим",
+    "Меню «Wasee Primary» в локации primary темы Astra: Home · Products (10 потомков) · About Us · Contact Us — зеркалирует структуру waseegroup.com, собирается через wp_update_nav_menu_item",
+    "Служебные страницы Home / About Us / Contact Us создаются автоматически; корзина и кабинет не переносятся (витрина без WooCommerce) — 301 на главную",
   ],
   fallback:
     "Без ACF данные лежат в нативных мета-полях — Astra-шаблоны плагина читают их напрямую. Поставите ACF позже — плагин сам синхронизирует мета в поля группы «Product Data».",
@@ -752,6 +891,7 @@ export const PLUGIN_FILES: { path: string; desc: string; size: string; kind: "ph
   { path: "includes/class-wasee-mapper.php", kind: "php", size: "5.1 KB", desc: "Маппинг OpenCart → мета/ACF, нормализация slug'ов, транслитерация" },
   { path: "includes/class-wasee-importer.php", kind: "php", size: "11.3 KB", desc: "wp_insert_post, media_sideload_image, привязка терминов, ре-импорт" },
   { path: "includes/class-wasee-log.php", kind: "php", size: "3.2 KB", desc: "Журнал операций в таблицу wp_wasee_import_log" },
+  { path: "includes/class-wasee-menu.php", kind: "php", size: "4.6 KB", desc: "Зеркало меню оригинала: nav menu в Astra + страницы Home/About Us/Contact Us" },
   { path: "templates/single-product.php", kind: "php", size: "7.8 KB", desc: "Страница товара под Astra: спецификации, галерея — уникальный дизайн" },
   { path: "templates/archive-product.php", kind: "php", size: "6.4 KB", desc: "Архив с фильтрами по категориям, сетка карточек" },
   { path: "admin/class-wasee-admin.php", kind: "php", size: "7.6 KB", desc: "Админ-страница «Инструменты → Wasee Import», AJAX-батчи по 5 товаров" },

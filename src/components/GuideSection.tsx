@@ -204,7 +204,7 @@ export default function GuideSection() {
   return (
     <section id="guide" className="mx-auto max-w-[1360px] scroll-mt-24 px-4 py-20 md:px-8">
       <SectionHead
-        index="06"
+        index="07"
         kicker="пошаговый гайд"
         title="Как пользоваться плагином"
         note="Гайд рассчитан на faseen.com — голый WordPress + Astra. Всё делается в админке, кодить не нужно. Отмечайте выполненные шаги — прогресс сохраняется."

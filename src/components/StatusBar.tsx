@@ -5,6 +5,7 @@ const NAV = [
   { id: "overview", label: "Обзор" },
   { id: "import", label: "Импорт" },
   { id: "catalog", label: "Каталог" },
+  { id: "sitemap", label: "Меню" },
   { id: "mapping", label: "Маппинг" },
   { id: "report", label: "Разведка" },
   { id: "guide", label: "Гайд" },

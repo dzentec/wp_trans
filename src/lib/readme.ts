@@ -84,6 +84,8 @@ export const README_SECTIONS: ReadmeSection[] = [
           ["Таксономия `product_category`", "иерархическая; 10 терминов создаются при первом импорте"],
           ["Мета-ключи", "wasee_product_code, wasee_legacy_product_id, wasee_legacy_url, wasee_specifications, wasee_gallery"],
           ["ЧПУ", "архив `/products/`, товар `/product/%slug%/` + flush_rewrite_rules()"],
+          ["Меню «Wasee Primary»", "зеркало меню оригинала в локации primary темы Astra: Home · Products (10 потомков) · About Us · Contact Us"],
+          ["Служебные страницы", "Home (front_page), About Us, Contact Us + форма [wasee_contact]; cart/checkout/account → 301 на главную"],
           ["Таблица журнала", "wp_wasee_import_log (время, уровень, сообщение)"],
           ["Опции", "wasee_source_url, wasee_selectors, wasee_batch_size, wasee_field_maps, wasee_progress"],
         ],
