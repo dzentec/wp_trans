@@ -7,6 +7,7 @@ const NAV = [
   { id: "catalog", label: "Каталог" },
   { id: "mapping", label: "Маппинг" },
   { id: "report", label: "Разведка" },
+  { id: "guide", label: "Гайд" },
 ];
 
 export default function StatusBar() {
