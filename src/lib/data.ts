@@ -758,7 +758,7 @@ export const PLUGIN_FILES: { path: string; desc: string; size: string; kind: "ph
   { path: "admin/views/page-import.php", kind: "php", size: "8.9 KB", desc: "UI: прогресс, живой лог, перемаппинг полей, кнопки ре-импорта" },
   { path: "assets/admin.css", kind: "css", size: "3.4 KB", desc: "Стили админки в духе технического консоля" },
   { path: "assets/admin.js", kind: "js", size: "5.7 KB", desc: "AJAX-раннер батчей, автопрокрутка лога, прогресс-бар" },
-  { path: "readme.txt", kind: "txt", size: "2.1 KB", desc: "Установка, запуск, типовые ошибки и их разбор" },
+  { path: "readme.txt", kind: "txt", size: "9.8 KB", desc: "Полностью переписан: 12 разделов — CLI, маппинг, Astra, FAQ, changelog; вкладывается в ZIP автоматически" },
 ];
 
 export const INSTALL_STEPS: { title: string; text: string }[] = [
