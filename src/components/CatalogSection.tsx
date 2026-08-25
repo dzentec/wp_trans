@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES, catCount, FALLBACK_IMG, PRODUCTS, type Product } from "../lib/data";
 import { Reveal, SectionHead, TagChip } from "../lib/ui";
-import { IconArrowR, IconCopy, IconCheck, IconSearch, IconX } from "./Icons";
+import { IconArrowR, IconCopy, IconCheck, IconSearch, IconSignal, IconX } from "./Icons";
 
 const onImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
   if (e.currentTarget.src !== FALLBACK_IMG) e.currentTarget.src = FALLBACK_IMG;
@@ -9,6 +9,8 @@ const onImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
 
 function importPayload(p: Product): string {
   const cat = CATEGORIES.find((c) => c.id === p.cat);
+  const page = `https://www.waseegroup.com/?route=product/product&product_id=${p.pid}`;
+  const imgBase = "https://www.waseegroup.com/image/cache/data/products/faseen/";
   const payload = {
     post_type: "product",
     post_title: p.name,
@@ -16,9 +18,20 @@ function importPayload(p: Product): string {
     meta: {
       wasee_product_code: p.model,
       wasee_legacy_id: p.pid,
-      wasee_legacy_url: `https://www.waseegroup.com/?route=product/product&product_id=${p.pid}`,
+      wasee_legacy_url: page,
       wasee_specifications: p.specs.map(([name, value]) => ({ name, value })),
-      wasee_gallery: p.image2 ? [`${p.model.toLowerCase()}-main.jpg`, `${p.model.toLowerCase()}-alt.jpg`] : [`${p.model.toLowerCase()}-main.jpg`],
+      wasee_gallery: p.image2
+        ? [`${p.model.toLowerCase()}-main.jpg`, `${p.model.toLowerCase()}-alt.jpg`]
+        : [`${p.model.toLowerCase()}-main.jpg`],
+    },
+    // откуда импортер физически берёт данные (парсер тянет вживую)
+    _source: {
+      page,
+      description_selector: ".item__galleryText",
+      images_selector: ".item__galleryLeft img, .item__galleryRight img",
+      specs_selector: "table.specs tr",
+      images_pulled_from: imgBase,
+      note: "media_sideload_image() скачивает каждый src в медиатеку WP",
     },
   };
   return JSON.stringify(payload, null, 2);
@@ -81,6 +94,27 @@ function Drawer({ product, onClose }: { product: Product; onClose: () => void })
           </div>
           <h3 className="mt-2 font-display text-2xl font-bold leading-tight">{product.name}</h3>
           <p className="mt-3 text-sm leading-relaxed text-dim">{product.description}</p>
+
+          {/* откуда взято */}
+          <div className="mt-4 border border-cyan/25 bg-cyan/[0.05] px-3.5 py-3">
+            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-cyan">
+              <IconSignal className="h-3.5 w-3.5" />
+              источник данных
+            </div>
+            <a
+              href={`https://www.waseegroup.com/?route=product/product&product_id=${product.pid}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1.5 block truncate font-mono text-[11px] text-steel underline decoration-line2 underline-offset-4 transition-colors hover:text-cyan"
+            >
+              waseegroup.com/?route=product/product&product_id={product.pid}
+            </a>
+            <p className="mt-1.5 text-[11.5px] leading-relaxed text-dim">
+              Описание — из <code className="font-mono text-cyan/90">.item__galleryText</code>, картинки —{" "}
+              <code className="font-mono text-cyan/90">.item__galleryLeft/Right img</code> и скачиваются в медиатеку через{" "}
+              <code className="font-mono text-cyan/90">media_sideload_image()</code>. Ничего не захардкожено.
+            </p>
+          </div>
 
           {/* specs */}
           <div className="mt-6 flex items-center justify-between">

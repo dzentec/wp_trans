@@ -20,7 +20,7 @@ export default function ReportSection() {
   return (
     <section id="report" className="mx-auto max-w-[1360px] scroll-mt-24 px-4 py-20 md:px-8">
       <SectionHead
-        index="05"
+        index="06"
         kicker="цель: голый wordpress"
         title="Astra — и больше ничего"
         note="На faseen.com нет ни CPT, ни ACF, ни таксономий — только ядро WP и тема Astra. Плагин регистрирует всю структуру сам при активации, цель готовить не нужно."

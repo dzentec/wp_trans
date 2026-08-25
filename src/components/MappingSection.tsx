@@ -8,7 +8,7 @@ export default function MappingSection() {
   return (
     <section id="mapping" className="mx-auto max-w-[1360px] scroll-mt-24 px-4 py-20 md:px-8">
       <SectionHead
-        index="04"
+        index="05"
         kicker="правила переноса"
         title="Маппинг OpenCart → WP"
         note="9 правил, сохранённых в wp_options (wasee_field_maps). Правки из админки переживают обновления плагина; конфликт-детектор сверяет селекторы с живой разметкой."

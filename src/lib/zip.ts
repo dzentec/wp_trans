@@ -15,6 +15,7 @@ export const ZIP_TREE: { path: string; note: string; size: string }[] = [
   { path: "wasee-importer/includes/class-wasee-mapper.php", note: "селекторы → пост + мета", size: "5.2 KB" },
   { path: "wasee-importer/includes/class-wasee-importer.php", note: "запись, медиа, термины", size: "10.6 KB" },
   { path: "wasee-importer/includes/class-wasee-log.php", note: "журнал wp_wasee_import_log", size: "2.9 KB" },
+  { path: "wasee-importer/includes/class-wasee-menu.php", note: "зеркало меню оригинала + служебные страницы", size: "4.6 KB" },
   { path: "wasee-importer/admin/class-wasee-admin.php", note: "меню, AJAX-хендлеры", size: "7.1 KB" },
   { path: "wasee-importer/admin/views/page-import.php", note: "вкладки, живой лог", size: "8.3 KB" },
   { path: "wasee-importer/templates/archive-product.php", note: "витрина под Astra", size: "2.2 KB" },
@@ -581,6 +582,127 @@ get_header(); ?>
         working = true; log('sys', 'Старт: ' + totalCount + ' позиций, батч ' + WaseeAdmin.batch); nextBatch();
     });
 })(jQuery);
+`,
+
+  "includes/class-wasee-menu.php": `<?php
+/**
+ * Зеркало структуры меню waseegroup.com на новом сайте.
+ *
+ * Создаёт: страницу Home (front_page), About Us, Contact Us,
+ * навигационное меню «Wasee Primary» в локации primary темы Astra:
+ *   Home | Products (10 потомков-категорий) | About Us | Contact Us
+ * Служебные OpenCart-страницы (cart/checkout/account) не переносятся:
+ * витрина без WooCommerce, на них ставится 301 на главную.
+ */
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+final class Wasee_Menu {
+
+    public static function install() {
+        self::create_pages();
+        self::create_menu();
+        self::create_service_redirects();
+    }
+
+    /** Home / About Us / Contact Us — те же страницы, что на оригинале. */
+    private static function create_pages() {
+        $pages = array(
+            'home'       => array( 'Home', 'OEM/ODM camera modules — каталог, спецификации, заявки.' ),
+            'about-us'   => array( 'About Us', '[wasee_about]' ),   // текст подтянет парсер info-страницы
+            'contact-us' => array( 'Contact Us', '[wasee_contact]' ), // форма плагина, wp_mail()
+        );
+        foreach ( $pages as $slug => $p ) {
+            $page = get_page_by_path( $slug );
+            if ( ! $page ) {
+                $page = get_post( wp_insert_post( array(
+                    'post_type'    => 'page',
+                    'post_status'  => 'publish',
+                    'post_title'   => $p[0],
+                    'post_name'    => $slug,
+                    'post_content' => $p[1],
+                ) ) );
+            }
+            if ( 'home' === $slug && $page ) {
+                update_option( 'show_on_front', 'page' );
+                update_option( 'page_on_front', $page->ID );
+            }
+        }
+    }
+
+    /** Навигационное меню, идентичное меню оригинального сайта. */
+    private static function create_menu() {
+        if ( wp_get_nav_menu_object( 'wasee-primary' ) ) { return; }
+        $menu_id = wp_create_nav_menu( 'Wasee Primary' );
+        $pos = 1;
+
+        $home = get_page_by_path( 'home' );
+        wp_update_nav_menu_item( $menu_id, 0, array(
+            'menu-item-title'     => 'Home',
+            'menu-item-object'    => 'page',
+            'menu-item-object-id' => $home->ID,
+            'menu-item-type'      => 'post_type',
+            'menu-item-status'    => 'publish',
+            'menu-item-position'  => $pos++,
+        ) );
+
+        // Products — архив каталога, родитель для 10 категорий
+        $parent = wp_update_nav_menu_item( $menu_id, 0, array(
+            'menu-item-title'    => 'Products',
+            'menu-item-url'      => home_url( '/products/' ),
+            'menu-item-type'     => 'custom',
+            'menu-item-status'   => 'publish',
+            'menu-item-position' => $pos++,
+        ) );
+        $terms = get_terms( array( 'taxonomy' => 'product_category', 'hide_empty' => false, 'orderby' => 'name', 'order' => 'ASC' ) );
+        if ( ! is_wp_error( $terms ) ) {
+            foreach ( $terms as $term ) {
+                wp_update_nav_menu_item( $menu_id, 0, array(
+                    'menu-item-title'     => $term->name,
+                    'menu-item-url'       => get_term_link( $term ),
+                    'menu-item-type'      => 'custom',
+                    'menu-item-status'    => 'publish',
+                    'menu-item-parent-id' => $parent,
+                    'menu-item-position'  => $pos++,
+                ) );
+            }
+        }
+
+        foreach ( array( 'about-us' => 'About Us', 'contact-us' => 'Contact Us' ) as $slug => $title ) {
+            $page = get_page_by_path( $slug );
+            wp_update_nav_menu_item( $menu_id, 0, array(
+                'menu-item-title'     => $title,
+                'menu-item-object'    => 'page',
+                'menu-item-object-id' => $page->ID,
+                'menu-item-type'      => 'post_type',
+                'menu-item-status'    => 'publish',
+                'menu-item-position'  => $pos++,
+            ) );
+        }
+
+        $locations = get_theme_mod( 'nav_menu_locations' );
+        $locations['primary'] = $menu_id; // главная локация темы Astra
+        set_theme_mod( 'nav_menu_locations', $locations );
+    }
+
+    /** Корзина/кабинет OpenCart на витрине не нужны — 301 на главную. */
+    private static function create_service_redirects() {
+        $rules = array(
+            'index.php?route=checkout/cart'     => home_url( '/' ),
+            'index.php?route=checkout/checkout' => home_url( '/' ),
+            'index.php?route=account/login'     => home_url( '/' ),
+        );
+        update_option( 'wasee_service_redirects', $rules );
+        add_action( 'template_redirect', function () use ( $rules ) {
+            $q = isset( $_GET['route'] ) ? sanitize_text_field( wp_unslash( $_GET['route'] ) ) : '';
+            foreach ( $rules as $route => $target ) {
+                if ( '' !== $q && false !== strpos( $route, $q ) ) {
+                    wp_safe_redirect( $target, 301 );
+                    exit;
+                }
+            }
+        } );
+    }
+}
 `,
 };
 

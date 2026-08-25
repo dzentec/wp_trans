@@ -379,7 +379,7 @@ export default function DocsSection() {
   return (
     <section id="docs" className="mx-auto max-w-[1360px] scroll-mt-24 px-4 py-20 md:px-8">
       <SectionHead
-        index="07"
+        index="08"
         kicker="документация и дистрибутив"
         title="README и сборка ZIP"
         note="README полностью переписан под голую цель (WP + Astra) и является единым источником правды: тот же текст автоматически вкладывается в архив как readme.txt."
