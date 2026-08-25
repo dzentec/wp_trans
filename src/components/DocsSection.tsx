@@ -192,8 +192,8 @@ function ZipCard() {
       return {};
     }
   });
-  const [phase, setPhase] = useState<"idle" | "building" | "done">("idle");
-  const [info, setInfo] = useState<{ files: number; bytes: number; url: string } | null>(null);
+  const [phase, setPhase] = useState<"pre" | "ready" | "done">("pre");
+  const [info, setInfo] = useState<{ files: number; bytes: number; crc32: string; url: string } | null>(null);
 
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify(checks));
@@ -201,21 +201,27 @@ function ZipCard() {
 
   const doneCount = ZIP_CHECKS.filter((c) => checks[c.id]).length;
 
-  const build = async () => {
-    if (phase === "building") return;
-    setPhase("building");
-    const { blob, files, bytes } = await buildPluginZip();
-    const url = URL.createObjectURL(blob);
+  /* релиз собирается один раз при загрузке страницы — скачивание мгновенное */
+  useEffect(() => {
+    let alive = true;
+    buildPluginZip().then(({ blob, files, bytes, crc32 }) => {
+      if (!alive) return;
+      setInfo({ files, bytes, crc32, url: URL.createObjectURL(blob) });
+      setPhase("ready");
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const download = () => {
+    if (!info) return;
     const a = document.createElement("a");
-    a.href = url;
+    a.href = info.url;
     a.download = ZIP_NAME;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setInfo((prev) => {
-      if (prev) URL.revokeObjectURL(prev.url);
-      return { files, bytes, url };
-    });
     setPhase("done");
   };
 
@@ -299,36 +305,68 @@ function ZipCard() {
         />
       </div>
 
-      {/* build button */}
+      {/* release metrics */}
+      {info && (
+        <div className="grid grid-cols-3 divide-x divide-line border-t border-line">
+          {[
+            ["файлов", String(info.files)],
+            ["размер", `${(info.bytes / 1024).toFixed(1)} KB`],
+            ["crc32", info.crc32],
+          ].map(([k, v]) => (
+            <div key={k} className="px-3 py-2.5">
+              <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-faint">{k}</div>
+              <div className="mt-0.5 truncate font-mono text-[11.5px] tabular-nums text-cyan" title={v}>{v}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* release button */}
       <div className="border-t border-line px-4 py-4">
         <button
-          onClick={build}
-          disabled={phase === "building"}
+          onClick={download}
+          disabled={!info}
           className={`flex w-full items-center justify-center gap-2.5 px-5 py-3 font-display text-sm font-bold uppercase tracking-wide transition-all ${
-            phase === "building"
+            !info
               ? "cursor-wait border border-line2 text-faint"
               : "bg-cyan text-ink hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_rgba(67,210,255,0.55)] active:translate-y-0"
           }`}
         >
           <IconBox className="h-4 w-4" />
-          {phase === "idle" && "Собрать и скачать ZIP"}
-          {phase === "building" && (
+          {!info && (
             <>
               <span className="blink inline-block h-3 w-3 border border-current" />
-              архивация…
+              сборка релиза…
             </>
           )}
-          {phase === "done" && "Скачать ещё раз"}
+          {info && phase === "ready" && `Скачать ${ZIP_NAME}`}
+          {info && phase === "done" && (
+            <>
+              <IconCheck className="h-4 w-4" />
+              скачано · ещё раз
+            </>
+          )}
         </button>
         {phase === "done" && info && (
           <p className="tickpop mt-2.5 flex items-center gap-2 font-mono text-[11px] text-mint">
             <IconCheck className="h-3.5 w-3.5" />
-            {ZIP_NAME} · {info.files} файлов · {(info.bytes / 1024).toFixed(1)} KB · readme.txt сгенерирован из консоли
+            {ZIP_NAME} · {info.files} файлов · crc32 {info.crc32} — сверьте с RELEASE_NOTES
           </p>
         )}
         <p className="mt-2.5 text-[11px] leading-relaxed text-faint">
-          Архив собирается прямо в браузере: рабочие исходники плагина + актуальный readme.txt. Загружается в WP
-          через «Плагины → Загрузить» или <code className="font-mono text-[10.5px] text-dim">wp plugin install</code>.
+          Среда сборки этой консоли не имеет shell и не умеет писать бинарные файлы в репозиторий, поэтому ZIP
+          собирается детерминированно в браузере (DEFLATE lvl 9, те же байты при каждой сборке) — а текстовые
+          релизные файлы уже лежат в{" "}
+          <a
+            href="/releases/RELEASE_NOTES.md"
+            target="_blank"
+            rel="noreferrer"
+            className="text-cyan underline decoration-cyan/40 underline-offset-4 transition-colors hover:text-fog"
+          >
+            public/releases/
+          </a>
+          . Установка: «Плагины → Загрузить» или{" "}
+          <code className="font-mono text-[10.5px] text-dim">wp plugin install {ZIP_NAME} --activate</code>.
         </p>
       </div>
     </div>
