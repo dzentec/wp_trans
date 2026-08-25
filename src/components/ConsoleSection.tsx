@@ -51,8 +51,15 @@ export default function ConsoleSection() {
   const scriptRef = useRef<Ev[]>([]);
   const idxRef = useRef(0);
   const timerRef = useRef<number | null>(null);
-  const startRef = useRef(0);
+  const virtualRef = useRef(0);
+  const lastRef = useRef(0);
+  const speedRef = useRef(1);
   const logBoxRef = useRef<HTMLDivElement>(null);
+  const [speed, setSpeedState] = useState(1);
+  const setSpeed = (s: number) => {
+    setSpeedState(s);
+    speedRef.current = s;
+  };
 
   useEffect(() => {
     const el = logBoxRef.current;
@@ -90,9 +97,13 @@ export default function ConsoleSection() {
     setRunning(true);
     scriptRef.current = buildImportScript();
     idxRef.current = 0;
-    startRef.current = performance.now();
+    virtualRef.current = 0;
+    lastRef.current = performance.now();
     timerRef.current = window.setInterval(() => {
-      const elapsed = performance.now() - startRef.current;
+      const now = performance.now();
+      virtualRef.current += (now - lastRef.current) * speedRef.current;
+      lastRef.current = now;
+      const elapsed = virtualRef.current;
       const script = scriptRef.current;
       let guard = 0;
       while (idxRef.current < script.length && script[idxRef.current].t <= elapsed && guard < 40) {
@@ -248,11 +259,24 @@ export default function ConsoleSection() {
               </button>
               <button
                 onClick={reset}
-                className="inline-flex items-center gap-2 border border-line2 px-4 py-2.5 font-mono text-[11.5px] uppercase tracking-widest text-dim transition-colors hover:border-coral/60 hover:text-coral"
+                className="inline-flex items-center gap-2 border border-line2 px-4 py-2.5 font-mono text-[11.5px] uppercase tracking-widest text-dim transition-colors hover:border-coral/60 hover:text-coral active:scale-95"
               >
                 <IconReset className="h-3.5 w-3.5" />
                 сброс
               </button>
+              <div className="flex items-center border border-line2" title="Скорость симуляции">
+                {[1, 4].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSpeed(s)}
+                    className={`px-3 py-2 font-mono text-[11.5px] tabular-nums transition-colors active:scale-95 ${
+                      speed === s ? "bg-amber font-semibold text-ink" : "text-dim hover:text-fog"
+                    }`}
+                  >
+                    {s}×
+                  </button>
+                ))}
+              </div>
               {finished && (
                 <span className="tickpop flex items-center gap-2 font-mono text-[11px] text-mint">
                   <IconCheck className="h-3.5 w-3.5" /> 0 ошибок · 1 медиа-повтор

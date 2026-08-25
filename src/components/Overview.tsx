@@ -162,7 +162,28 @@ export default function Overview() {
   }, []);
 
   return (
-    <section id="overview" className="relative mx-auto max-w-[1360px] scroll-mt-24 px-4 pb-16 pt-28 md:px-8 md:pt-36">
+    <section id="overview" className="relative mx-auto max-w-[1360px] scroll-mt-24 px-4 pb-16 pt-28 md:px-8 md:pt-40">
+      {/* pcb traces */}
+      <svg
+        className="pointer-events-none absolute right-4 top-8 hidden w-[460px] text-line2 opacity-70 lg:block"
+        viewBox="0 0 460 150"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="M460 20H300V55H180V95H60" stroke="currentColor" strokeWidth="1.2" />
+        <path d="M460 60H350V105H250V130H140" stroke="#2E4066" strokeWidth="1.2" className="dashline" />
+        <path d="M460 100H390V35H310V75H240V20H120" stroke="#2E4066" strokeWidth="1.2" />
+        <path d="M460 135H410V70H340" stroke="rgba(255,178,36,0.35)" strokeWidth="1.2" className="dashline" />
+        {[
+          [60, 95], [140, 130], [120, 20], [340, 70], [310, 75],
+        ].map(([x, y]) => (
+          <rect key={`${x}-${y}`} x={x - 3.5} y={y - 3.5} width="7" height="7" stroke="currentColor" strokeWidth="1.2" />
+        ))}
+        <circle cx="60" cy="95" r="1.6" fill="#FFB224" />
+        <circle cx="140" cy="130" r="1.6" fill="#43D2FF" />
+        <circle cx="340" cy="70" r="1.6" fill="#FFB224" />
+      </svg>
+
       {/* headline row */}
       <div className="grid gap-10 lg:grid-cols-12">
         <div className="lg:col-span-7">

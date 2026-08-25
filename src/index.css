@@ -148,3 +148,38 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 .tickpop { animation: tickpop 0.35s ease-out both; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 52s linear infinite; }
+.marquee-hover:hover .marquee-track { animation-play-state: paused; }
+
+@keyframes bootline {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.bootline { animation: bootline 0.18s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .scanline,
+  .dashline,
+  .stripes,
+  .blink,
+  .livedot,
+  .glowpulse,
+  .rowflash,
+  .bootline {
+    animation: none !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
